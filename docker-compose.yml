@@ -1,20 +1,26 @@
+version: "3.8"
+
 services:
   server:
     build: .
     ports:
       - "8080:8080"
-
     depends_on:
-      - db_mysql
+      db_mysql:
+        condition: service_healthy
 
   db_mysql:
-    image: mysql
+    image: mysql:8.0
     ports:
       - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: todo
-
+    healthcheck:
+      test: "/usr/bin/mysql --user=root --password=root --execute \"SHOW DATABASES;\""
+      interval: 5s
+      timeout: 30s
+      retries: 3
     volumes:
       - mysql_data:/var/lib/mysql
 
