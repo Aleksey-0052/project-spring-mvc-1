@@ -32,7 +32,7 @@ public class GlobalControllerHandler {
 
     @ExceptionHandler(InvalidIdException.class)
     public ResponseEntity<String> handleInvalidIdException(InvalidIdException ex) {
-        log.error("Invalid task id: {}. Id cannot be zero or have a negative value", ex.getMessage());
+        log.error("Id cannot be zero or have a negative value {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body("Invalid task id. Id cannot be zero or have a negative value");
     }
@@ -40,7 +40,7 @@ public class GlobalControllerHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<String> handleResourceNotFoundException(ResourceNotFoundException ex) {
-        log.error("Task with id: {} not found. Incorrect identifier entered", ex.getMessage());
+        log.error("Incorrect identifier entered {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 

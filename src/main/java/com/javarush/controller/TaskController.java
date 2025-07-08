@@ -69,7 +69,7 @@ public class TaskController {
 
     private void validateId(Integer id) {
         if (Objects.isNull(id) || id <= 0) {
-            throw new InvalidIdException("Invalid task id");
+            throw new InvalidIdException("Invalid task id: " + id);
         }
     }
 

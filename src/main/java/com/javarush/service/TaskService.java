@@ -34,7 +34,7 @@ public class TaskService {
     public Task edit(int id, TaskDto taskDto) {
         Task task = taskDAO.getById(id);
         if (Objects.isNull(task)) {
-            throw new ResourceNotFoundException("Entity not found");
+            throw new ResourceNotFoundException(id);
         }
         mapper.updateTaskFromTaskDto(taskDto, task);
         taskDAO.saveOrUpdate(task);
@@ -51,7 +51,7 @@ public class TaskService {
     public void delete(int id) {
         Task task = taskDAO.getById(id);
         if (isNull(task)) {
-            throw new ResourceNotFoundException("Entity not found");
+            throw new ResourceNotFoundException(id);
         }
         taskDAO.delete(task);
     }
