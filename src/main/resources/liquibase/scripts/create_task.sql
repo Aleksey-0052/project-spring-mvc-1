@@ -5,7 +5,7 @@ DROP TABLE IF EXISTS task;
 
 CREATE TABLE todo.task (
    id           int(11)       NOT NULL AUTO_INCREMENT,
-   description  varchar(100)  NOT NULL,
+   description  varchar(10)  NOT NULL,
    status       int(11)       NOT NULL,
    PRIMARY KEY (id)
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4;
@@ -28,6 +28,7 @@ INSERT IGNORE INTO todo.task VALUES
   (13,'nnn',1),
   (14,'ooo',2),
   (15,'ppp',0);
+
 
 
 

@@ -5,9 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 import liquibase.integration.spring.SpringLiquibase;
 import org.hibernate.cfg.Environment;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.context.annotation.*;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -18,11 +16,15 @@ import java.util.Properties;
 
 @Configuration
 @EnableTransactionManagement
+@ComponentScan("com.javarush")
 @PropertySource(value = "classpath:application.properties")
 public class AppConfig {
 
-    @Value("${spring.datasource.url}")
-    private String url;
+    @Value("${spring.datasource.defaultUrl}")
+    private String defaultUrl;
+
+    @Value("${spring.datasource.dockerUrl}")
+    private String dockerUrl;
 
     @Value("${spring.datasource.driver-class-name}")
     private String driver;
@@ -45,29 +47,26 @@ public class AppConfig {
     @Value("${spring.jpa.hibernate.ddl-auto}")
     private String ddlAuto;
 
-    @Value("${liquibase.change-log}")
+    @Value("${spring.liquibase.change-log}")
     private String changeLog;
 
 
     @Bean
-    public LocalSessionFactoryBean sessionFactoryBean() {
-        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
-        sessionFactory.setDataSource(dataSource());
-        sessionFactory.setPackagesToScan("com.javarush.domain");
-        sessionFactory.setHibernateProperties(hibernateProperties());
-        return sessionFactory;
-    }
+    @Profile("!docker")
+    public DataSource localDataSource() {
+        return createDataSource(defaultUrl);
 
-    private Properties hibernateProperties() {
-        Properties properties = new Properties();
-        properties.put(Environment.DIALECT, dialect);
-        //properties.put(Environment.DRIVER, driver);
-        properties.put(Environment.HBM2DDL_AUTO, ddlAuto);
-        return properties;
+        // @Primary - в данном случае локальный бин используется по умолчанию без аннотации @Primary
     }
 
     @Bean
-    public DataSource dataSource() {
+    @Profile("docker")
+    public DataSource dockerDataSource() {
+        return createDataSource(dockerUrl);
+    }
+
+
+    private DataSource createDataSource(String url) {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName(driver);
         dataSource.setJdbcUrl(url);
@@ -78,6 +77,27 @@ public class AppConfig {
         return dataSource;
     }
 
+
+    @Bean(name = "entityManagerFactory")
+    public LocalSessionFactoryBean sessionFactoryBean(DataSource dataSource) {
+        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
+        sessionFactory.setDataSource(dataSource);
+        sessionFactory.setPackagesToScan("com.javarush.domain");
+        sessionFactory.setHibernateProperties(hibernateProperties());
+        return sessionFactory;
+
+        // @Bean(name = "entityManagerFactory") - без указания имени бина Spring не мог найти в своем контексте этот бин
+    }
+
+    private Properties hibernateProperties() {
+        Properties properties = new Properties();
+        properties.put(Environment.DIALECT, dialect);
+        properties.put(Environment.HBM2DDL_AUTO, ddlAuto);
+        properties.put(Environment.SHOW_SQL, showSql);
+        return properties;
+    }
+
+
     @Bean
     public PlatformTransactionManager transactionManager(EntityManagerFactory factory) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
@@ -85,10 +105,15 @@ public class AppConfig {
         return transactionManager;
     }
 
+
+
+    // SpringBoot запускает liquibase без данного бина. Но в данном случае этот бин нужен для того, чтобы использовать
+    // liquibase для инициализации базы данных как при старте приложения через IDEA, так и запуске приложения через docker
+
     @Bean
-    public SpringLiquibase liquibase() {
+    public SpringLiquibase liquibase(DataSource dataSource) {
         SpringLiquibase liquibase = new SpringLiquibase();
-        liquibase.setDataSource(dataSource());
+        liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(changeLog);
         return liquibase;
     }

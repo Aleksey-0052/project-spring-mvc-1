@@ -1,7 +1,7 @@
 package com.javarush.controller;
 
 import com.javarush.domain.Task;
-import com.javarush.dto.TaskDto;
+import com.javarush.dto.TaskDTO;
 import com.javarush.exception.InvalidIdException;
 import com.javarush.service.TaskService;
 import jakarta.validation.Valid;
@@ -23,7 +23,7 @@ public class TaskController {
     private final TaskService taskService;
 
 
-    @GetMapping(value = "/")
+    @GetMapping("/")
     public String tasks(
             Model model,
             @RequestParam(value = "page", required = false, defaultValue = "1") int page,
@@ -42,19 +42,17 @@ public class TaskController {
 
 
     @PostMapping("/{id}")
-    public String edit(@PathVariable Integer id,
-                       @Valid @RequestBody TaskDto taskDto,
-                       BindingResult bindingResult,
-                       Model model) {
+    public String edit(@PathVariable Integer id, @Valid @RequestBody TaskDTO taskDTO,
+                       BindingResult bindingResult, Model model) {
         validateId(id);
-        Task task = taskService.edit(id, taskDto);
+        taskService.edit(id, taskDTO);
         return tasks(model, 1, 10);
     }
 
 
     @PostMapping("/")
-    public String add(@Valid @RequestBody TaskDto taskDto, BindingResult bindingResult, Model model) {
-        Task task = taskService.create(taskDto);
+    public String add(@Valid @RequestBody TaskDTO taskDTO, BindingResult bindingResult, Model model) {
+        taskService.create(taskDTO);
         return tasks(model, 1, 10);
     }
 

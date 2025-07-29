@@ -1,7 +1,7 @@
 package com.javarush.mapper;
 
 import com.javarush.domain.Task;
-import com.javarush.dto.TaskDto;
+import com.javarush.dto.TaskDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -9,9 +9,9 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring")
 public interface TaskMapper {
 
-    Task toEntity(TaskDto taskDto);
+    Task toEntity(TaskDTO taskDto);
 
     @Mapping(target = "id", ignore = true)
-    void updateTaskFromTaskDto(TaskDto taskDto, @MappingTarget Task task);
+    void updateTaskFromTaskDto(TaskDTO taskDto, @MappingTarget Task task);
 
 }

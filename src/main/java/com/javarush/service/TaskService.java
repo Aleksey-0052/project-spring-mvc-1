@@ -2,7 +2,7 @@ package com.javarush.service;
 
 import com.javarush.dao.TaskDAO;
 import com.javarush.domain.Task;
-import com.javarush.dto.TaskDto;
+import com.javarush.dto.TaskDTO;
 import com.javarush.exception.ResourceNotFoundException;
 import com.javarush.mapper.TaskMapper;
 import lombok.AllArgsConstructor;
@@ -19,7 +19,7 @@ import static java.util.Objects.isNull;
 public class TaskService {
 
     private final TaskDAO taskDAO;
-    private final TaskMapper mapper;
+    private final TaskMapper taskMapper;
 
 
     public List<Task> getAll(int offset, int limit) {
@@ -31,18 +31,18 @@ public class TaskService {
     }
 
     @Transactional
-    public Task edit(int id, TaskDto taskDto) {
+    public Task edit(int id, TaskDTO taskDTO) {
         Task task = taskDAO.getById(id);
         if (Objects.isNull(task)) {
             throw new ResourceNotFoundException(id);
         }
-        mapper.updateTaskFromTaskDto(taskDto, task);
+        taskMapper.updateTaskFromTaskDto(taskDTO, task);
         taskDAO.saveOrUpdate(task);
         return task;
     }
 
-    public Task create(TaskDto taskDto) {
-        Task task = mapper.toEntity(taskDto);
+    public Task create(TaskDTO taskDTO) {
+        Task task = taskMapper.toEntity(taskDTO);
         taskDAO.saveOrUpdate(task);
         return task;
     }
