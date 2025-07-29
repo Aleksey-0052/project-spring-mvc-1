@@ -7,6 +7,7 @@ import org.hibernate.cfg.Environment;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.orm.hibernate5.LocalSessionFactoryBean;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -21,8 +22,11 @@ import java.util.Properties;
 @PropertySource(value = "classpath:application.properties")
 public class AppConfig {
 
-    @Value("${spring.datasource.url}")
-    private String url;
+    @Value("${spring.datasource.defaultUrl}")
+    private String defaultUrl;
+
+    @Value("${spring.datasource.dockerUrl}")
+    private String dockerUrl;
 
     @Value("${spring.datasource.driver-class-name}")
     private String driver;
@@ -50,24 +54,19 @@ public class AppConfig {
 
 
     @Bean
-    public LocalSessionFactoryBean sessionFactoryBean() {
-        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
-        sessionFactory.setDataSource(dataSource());
-        sessionFactory.setPackagesToScan("com.javarush.domain");
-        sessionFactory.setHibernateProperties(hibernateProperties());
-        return sessionFactory;
-    }
-
-    private Properties hibernateProperties() {
-        Properties properties = new Properties();
-        properties.put(Environment.DIALECT, dialect);
-        //properties.put(Environment.DRIVER, driver);
-        properties.put(Environment.HBM2DDL_AUTO, ddlAuto);
-        return properties;
+    @Profile("!docker")
+    public DataSource localDataSource() {
+        return createDataSource(defaultUrl) ;
     }
 
     @Bean
-    public DataSource dataSource() {
+    @Profile("docker")
+    public DataSource dockerDataSource() {
+        return createDataSource(dockerUrl) ;
+    }
+
+
+    private DataSource createDataSource(String url) {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName(driver);
         dataSource.setJdbcUrl(url);
@@ -78,6 +77,24 @@ public class AppConfig {
         return dataSource;
     }
 
+
+    @Bean(name = "entityManagerFactory")
+    public LocalSessionFactoryBean sessionFactoryBean(DataSource dataSource) {
+        LocalSessionFactoryBean sessionFactory = new LocalSessionFactoryBean();
+        sessionFactory.setDataSource(dataSource);
+        sessionFactory.setPackagesToScan("com.javarush.domain");
+        sessionFactory.setHibernateProperties(hibernateProperties());
+        return sessionFactory;
+    }
+
+    private Properties hibernateProperties() {
+        Properties properties = new Properties();
+        properties.put(Environment.DIALECT, dialect);
+        properties.put(Environment.HBM2DDL_AUTO, ddlAuto);
+        return properties;
+    }
+
+
     @Bean
     public PlatformTransactionManager transactionManager(EntityManagerFactory factory) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
@@ -85,10 +102,11 @@ public class AppConfig {
         return transactionManager;
     }
 
+
     @Bean
-    public SpringLiquibase liquibase() {
+    public SpringLiquibase liquibase(DataSource dataSource) {
         SpringLiquibase liquibase = new SpringLiquibase();
-        liquibase.setDataSource(dataSource());
+        liquibase.setDataSource(dataSource);
         liquibase.setChangeLog(changeLog);
         return liquibase;
     }
